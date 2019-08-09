@@ -5,6 +5,9 @@ class NodoSerpiente(object):
         self.y = y
         self.sig = next # Siguiente es Derecha
         self.ant = prev # Anterior es Izquierda
+    '''
+    PRIMERO ->  null (ant)<- NodoS ->(sig) null <- ULTIMO
+    '''
 
 # Pila (PUNTOS)
 class NodoPila(object):
@@ -12,6 +15,21 @@ class NodoPila(object):
         self.x = x
         self.y = y
         self.sig = next # Siguiente es abajo
+    '''
+    TOPE
+      |
+      v
+    nodoP
+      |
+      v(sig)
+    nodoP
+      |
+      v(sig)
+    FONDO
+      |
+      v
+    null
+    '''
 
 # Cola o Fila (PUNTAJES)
 class NodoCola(object):
@@ -20,6 +38,9 @@ class NodoCola(object):
         self.pts = p
         self.sig = next # Siguiente es el que va atras
         # self.ant = bef # Anterior es el que va adelante
+    '''
+    FRENTE -> nodoC ->(sig) nodoC ->(sig) null <- COLA
+    '''
 
 
 # Lista Circular Doblemente Enlazada (USUARIOS)
@@ -28,3 +49,10 @@ class NodoUsuario(object):
         self.name = n
         self.sig = next # Siguiente es Derecha
         self.ant = bef # Anterior es Izquierda
+    '''
+        |-----------------------------------------------
+        v                                              |
+    PRIMERO -> (ant)<- nodoU ->(sig) (ant)<- nodoU ->(sig) <- ULTIMO
+                 |                                             ^
+                 |_____________________________________________|
+    '''
