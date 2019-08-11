@@ -80,35 +80,35 @@ class ListaDoble(object):
             grafo += str("nI[label=\"//\"];\n")
             grafo += str("nF[label=\"//\"];\n")
             while aux is not None:
-                grafo += str(hex(id(aux)) + "[label=\"(" + aux.x + "," + aux.y + ")\"];\n")
+                grafo += str(str(id(aux)) + "[label=\"(" + str(aux.x) + "," +str(aux.y) + ")\"];\n")
                 aux = aux.sig
 
             aux = self.primero
             while aux is not None:
                 if self.primero is self.ultimo:
-                    grafo += str(hex(id(aux)) + "-> nI")
-                    grafo += str(hex(id(aux)) + "-> nF")
+                    grafo += str(str(id(aux)) + "-> nI\n")
+                    grafo += str(str(id(aux)) + "-> nF\n")
                 elif aux.sig is None:
-                    grafo += str(hex(id(aux)) + "-> nF")
-                    grafo += str(hex(id(aux)) + "->" + hex(id(aux.ant)))
+                    grafo += str(str(id(aux)) + "-> nF\n")
+                    grafo += str(str(id(aux)) + "->" + str(id(aux.ant)) + "\n")
                 else:
                     if aux.ant is None:
-                        grafo += str(hex(id(aux)) + "->" + hex(id(aux.sig)))
-                        grafo += str(hex(id(aux)) + "-> nI")
+                        grafo += str(str(id(aux)) + "->" + str(id(aux.sig)) + "\n")
+                        grafo += str(str(id(aux)) + "-> nI\n")
                     else:
-                        grafo += str(hex(id(aux)) + "->" + hex(id(aux.sig)))
-                        grafo += str(hex(id(aux)) + "->" + hex(id(aux.ant)))
+                        grafo += str(str(id(aux)) + "->" + str(id(aux.sig)) + "\n")
+                        grafo += str(str(id(aux)) + "->" + str(id(aux.ant)) + "\n")
                 aux = aux.sig
         
         grafo += str("label = \"Snake\"\n")
         grafo += str("}")
 
-        f = open("ListaSnake.dot","w+")
+        f = open("Graficas/ListaSnake.dot","w+")
         f.write(grafo)
         f.close()
 
-        os.system("dot -Tjpg ListaSnake.dot -o Lista_Snake.jpg")
-        im = Image.open('Lista_Snake.jpg')
+        os.system("dot -Tjpg Graficas/ListaSnake.dot -o Graficas/Lista_Snake.jpg")
+        im = Image.open('Graficas/Lista_Snake.jpg')
         im.show()
 
 
@@ -160,24 +160,24 @@ class Pila(object):
         else:
             grafo += str("n0[label=\" \"];\n")
             while aux is not None:
-                grafo += str(hex(id(aux)) + "[label=\"(" + aux.x + "," + aux.y + ")\"];\n")
+                grafo += str(str(id(aux)) + "[label=\"(" + str(aux.x) + "," + str(aux.y) + ")\"];\n")
                 aux = aux.sig
             aux = self.tope
-            grafo += str("n0->" + hex(id(aux.sig)) + ";\n")
+            grafo += str("n0->" + str(id(aux)) + ";\n")
             while aux is not None:
                 if aux.sig is not None:
-                    grafo += str(hex(id(aux)) + "->" + hex(id(aux.sig)) + ";\n")
+                    grafo += str(str(id(aux)) + "->" + str(id(aux.sig)) + ";\n")
                 aux = aux.sig
         
         grafo += str("label = \"Puntos\"\n")
         grafo += str("}")
 
-        f = open("PilaPunteo.dot","w+")
+        f = open("Graficas/PilaPunteo.dot","w+")
         f.write(grafo)
         f.close()
 
-        os.system("dot -Tjpg PilaPunteo.dot -o Pila_Punteo.jpg")
-        im = Image.open('Pila_Punteo.jpg')
+        os.system("dot -Tjpg Graficas/PilaPunteo.dot -o Graficas/Pila_Punteo.jpg")
+        im = Image.open('Graficas/Pila_Punteo.jpg')
         im.show()
 
 
@@ -232,24 +232,26 @@ class Cola(object):
             grafo += str("\"Cola Vacia\"\n")
         else:
             while aux is not None:
-                grafo += str(hex(id(aux)) + "[label=Usuario:" + aux.name + "\nPts: " + aux.pts + "];\n")
+                grafo += str(str(id(aux)) + "[label=\"Usuario: " + aux.name + "|Pts: " + str(aux.pts) + "\"];\n")
                 aux = aux.sig
             aux = self.frente
             while aux is not None:
                 if aux.sig is not None:
-                    grafo += str(hex(id(aux)) + "->" + hex(id(aux.sig)) + ";\n")
+                    grafo += str(str(id(aux)) + "->" + str(id(aux.sig)) + ";\n")
                 aux = aux.sig
         
         grafo += str("label = \"Scoreboard\"\n")
         grafo += str("}")
 
-        f = open("ColaScoreboard.dot","w+")
+        f = open("Graficas/ColaScoreboard.dot","w+")
         f.write(grafo)
         f.close()
-
-        os.system("dot -Tjpg ColaScoreboard.dot -o Cola_Scoreboard.jpg")
-        im = Image.open('Cola_Scoreboard.jpg')
-        im.show()
+        try:
+            os.system("dot -Tjpg Graficas/ColaScoreboard.dot -o Graficas/Cola_Scoreboard.jpg")
+            im = Image.open('Graficas/Cola_Scoreboard.jpg')
+            im.show()
+        except:
+            print("Error al abrir imagen")
 
 
 class ListaCircularDoble(object):
@@ -297,36 +299,66 @@ class ListaCircularDoble(object):
             grafo += str("\"No hay Usuarios\"\n")
         else:
             if self.primero is self.ultimo and self.primero is not None:
-                grafo += str(hex(id(aux)) + "[label=\"Usuario: " + aux.name + "\"];\n")
-                grafo += str(hex(id(aux)) + "->" + hex(id(aux.sig)))
-                grafo += str(hex(id(aux)) + "->" + hex(id(aux.ant)))
+                grafo += str(str(id(aux)) + "[label=\"Usuario: " + str(aux.name) + "\"];\n")
+                grafo += str(str(id(aux)) + "->" + str(id(aux.sig)) + "\n")
+                grafo += str(str(id(aux)) + "->" + str(id(aux.ant)) + "\n")
             else:
                 while True:
-                    grafo += str(hex(id(aux)) + "[label=\"Usuario: " + aux.name + "\"];\n")
-                    
+                    grafo += str(str(id(aux)) + "[label=\"Usuario: " + str(aux.name) + "\"];\n")
                     aux = aux.sig
+
                     if aux is self.primero:
                         break
                 
                 aux = self.primero
-
                 while True:
-                    grafo += str(hex(id(aux)) + "->" + hex(id(aux.ant)))
-                    grafo += str(hex(id(aux)) + "->" + hex(id(aux.sig)))
-                    
+                    grafo += str(str(id(aux)) + "->" + str(id(aux.ant)) + "\n")
+                    grafo += str(str(id(aux)) + "->" + str(id(aux.sig)) + "\n")
                     aux = aux.sig
+
                     if aux is self.primero:
                         break
         
         grafo += str("label = \"Users\"\n")
         grafo += str("}")
 
-        f = open("ListaUsuarios.dot","w+")
+        f = open("Graficas/ListaUsuarios.dot","w+")
         f.write(grafo)
         f.close()
 
-        os.system("dot -Tjpg ListaUsuarios.dot -o Lista_Usuarios.jpg")
-        im = Image.open('Lista_Usuarios.jpg')
+        os.system("dot -Tjpg Graficas/ListaUsuarios.dot -o Graficas/Lista_Usuarios.jpg")
+        im = Image.open('Graficas/Lista_Usuarios.jpg')
         im.show()
 
-lel = ListaCircularDoble().graficar()
+'''
+snake = ListaDoble()
+snake.add(2,4)
+snake.add(6,28)
+snake.graficar()
+'''
+'''
+puntos = Pila()
+puntos.push(1,2)
+puntos.push(3,6)
+puntos.push(33,44)
+puntos.push(3,6)
+puntos.pop()
+puntos.graficar()
+'''
+'''
+marcadores = Cola()
+marcadores.enqueue("Usuario X",2)
+marcadores.enqueue("Usuario Y",12)
+marcadores.enqueue("Usuario Z",9)
+marcadores.enqueue("Usuario Xyz",666)
+marcadores.dequeue()
+marcadores.graficar()
+'''
+'''
+usuarios = ListaCircularDoble()
+usuarios.add("Piiitochu")
+usuarios.add("Yo te")
+usuarios.add("ELIIIIJO")
+usuarios.add("ALV!!!!!!")
+usuarios.graficar()
+'''
