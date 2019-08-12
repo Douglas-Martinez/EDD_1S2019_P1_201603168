@@ -1,4 +1,5 @@
 import curses
+import csv
 
 from Estructuras import ListaDoble, ListaCircularDoble, Pila, Cola
 from Nodos import NodoSerpiente, NodoPila, NodoCola, NodoUsuario
@@ -20,15 +21,16 @@ class Snake(object):
         KEY_LEFT: KEY_RIGHT, KEY_RIGHT: KEY_LEFT,
     }
 
-    def __init__(self, x, y, window, us):
+    def __init__(self, x, y, window, lc, us):
         self.body_list = []
         self.hit_score = 0
         self.timeout = TIMEOUT
         self.nivel = 1
         self.win = False
         self.lose = False
-        self.user = us
-        #self.estado = "Estado"
+        self.usuarioactual = us
+        self.listacuerpo = lc
+        self.tam = 3
 
         for i in range(SNAKE_TAM, 0, -1):
             self.body_list.append(Body(x - i, y))
@@ -48,36 +50,64 @@ class Snake(object):
         self.body_list.extend(body_list)
 
     def eat_food(self, food):
-        food.reset()
-        body = Body(self.last_head_coor[0], self.last_head_coor[1])
-        self.body_list.insert(-1, body)
-        self.hit_score += 1
+        if food.tipo is 1:
+            body = Body(self.last_head_coor[0], self.last_head_coor[1])
+            self.body_list.insert(-1, body)
+            self.tam += 1
+            self.hit_score += 1
+        elif food.tipo is 2:
+            self.body_list.pop(0)
+            self.tam -= 1
+            self.hit_score -= 1
 
-        if self.hit_score is 5:
+        if self.hit_score is 15:
             if self.nivel is 3:
                 #self.estado = "Puntos iguales a 5, Nivel es 3 y Win"
                 self.win = True
             else:
                 #self.estado = "Puntos iguales a 5 y Nivel no es 3"
-
                 self.nivel += 1
                 self.hit_score = 0
                 if self.nivel is 2:
-                    self.timeout = 150
+                    self.timeout = 170
+
+                    self.body_list = []
+                    self.tam = 3
+                    for i in range(SNAKE_TAM, 0, -1):
+                        self.body_list.append(Body(20 - i, 10))
+                    self.body_list.append(Body(20, 10, '#'))
+                    self.direction = KEY_RIGHT
+
                 elif self.nivel is 3:
-                    self.timeout = 100
+                    self.timeout = 125 
+
+                    self.body_list = []
+                    self.tam = 3
+                    for i in range(SNAKE_TAM, 0, -1):
+                        self.body_list.append(Body(20 - i, 10))
+                    self.body_list.append(Body(20, 10, '#'))
+                    self.direction = KEY_RIGHT
         else:
             #self.estado = "Puntos menores a 5 => Actual: " + str(self.hit_score)
             if self.nivel is 1:
-                self.timeout -= 2
+                if food.tipo is 1:
+                    self.timeout -= 2
+                elif food.tipo is 2:
+                    self.timeout += 2
                 self.window.timeout(self.timeout)
             elif self.nivel is 2:
-                #if self.hit_score % 3 == 0:
-                self.timeout -= 3
+                if food.tipo is 1:
+                    self.timeout -= 3
+                elif food.tipo is 2:
+                    self.timeout += 3
                 self.window.timeout(self.timeout)
             elif self.nivel is 3:
-                self.timeout -= 4
+                if food.tipo is 1:
+                    self.timeout -= 4
+                elif food.tipo is 2:
+                    self.timeout += 4
                 self.window.timeout(self.timeout)
+        food.reset(self.tam)
 
     def update(self):
         last_body = self.body_list.pop(0)
@@ -92,7 +122,9 @@ class Snake(object):
             self.direction = direction
 
     def render(self):
+        self.listacuerpo.clean()
         for body in self.body_list:
+            self.listacuerpo.add(body.y,body.x,str(body.char))
             self.window.addstr(body.y, body.x, body.char)
 
     def move_up(self):
@@ -134,7 +166,7 @@ class Snake(object):
         
     @property
     def score(self):
-        return 'Pts: {} Level: {}'.format(self.hit_score,self.nivel)
+        return 'Pts: {} Level: {} ----- User: {}'.format(self.hit_score,self.nivel,self.usuarioactual)
 
     @property
     def collided(self):
@@ -160,16 +192,30 @@ class Body(object):
         return self.x, self.y
 
 class Food(object):
-    def __init__(self, window, char='*'):
+    def __init__(self, window):
         self.x = randint(1, MAX_X)
         self.y = randint(1, MAX_Y)
+        self.tipo = 1
         self.window = window
-        self.char = char
+        self.char = '+'
 
     def render(self):
         self.window.addstr(self.y, self.x, self.char)
 
-    def reset(self):
+    def reset(self,t):
+        tam = t
+        opcion = 0
+        if tam > 3:
+            opcion = randint(0,10)
+
+        #malos 1, 4, 7
+        if opcion is 1 or opcion is 4 or opcion is 7:
+            self.tipo = 2
+            self.char = '*'
+        #buenos 0, 2, 3, 5, 6, 8, 9
+        else:
+            self.tipo = 1
+            self.char = '+'
         self.x = randint(1, MAX_X)
         self.y = randint(1, MAX_Y)
 
@@ -177,19 +223,24 @@ class Food(object):
 def menu(window,usua):
     window.clear()
     window.border(0)
-    window.addstr(1,1,usua)
+    window.addstr(1,ANCHO//2-len("MENU"),"MENU")
+    if usua is "":
+        window.addstr(2,1,"Usuario: Niguno")
+    else:
+        window.addstr(2,1,"Usuario: " + str(usua))
     window.addstr(7,10,"1. Jugar")
     window.addstr(8,10,"2. Puntuaciones")
     window.addstr(9,10,"3. Seleccion de Usuario")
     window.addstr(10,10,"4. Reportes")
     window.addstr(11,10,"5. Carga Masiva")
-    window.addstr(12,10,"6. Salir")
+    window.addstr(12,10,"6. Limpiar Usuario")
+    window.addstr(13,10,"7. Salir")
 
-def play(window,us,cola):
+def play(window,us,lista):
     window.clear()
     window.border(0)
-    snake = Snake(SNAKE_X,SNAKE_Y, window,us)
-    food = Food(window,'*')
+    snake = Snake(SNAKE_X,SNAKE_Y, window, lista, us)
+    food = Food(window)
     
     while True:
         window.clear()
@@ -202,23 +253,25 @@ def play(window,us,cola):
 
         if event == 27:
             break
-        
-        if event in [KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]:
-            snake.change_direction(event)
-
-        if snake.head.x == food.x and snake.head.y == food.y:
-            curses.beep()
-            if (snake.hit_score + 1) is 5:
-                pila.vaciar()
-            else:
-                pila.push(food.y,food.x)
-            snake.eat_food(food) 
-
-        if event == 32:
-            pila.graficar()
+        elif event == 32:
+            snake.listacuerpo.graficar()
+            #pila.graficar()
             key = -1
             while key != 32:
                 key = window.getch()
+        elif event in [KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]:
+            snake.change_direction(event)
+        
+        if snake.head.x == food.x and snake.head.y == food.y:
+            curses.beep()
+            if (snake.hit_score + 1) is 15:
+                pila.vaciar()
+            else:
+                if food.tipo is 1:
+                    pila.push(food.y,food.x)
+                elif food.tipo is 2:
+                    pila.pop()
+            snake.eat_food(food) 
 
         snake.update()
 
@@ -234,24 +287,40 @@ def play(window,us,cola):
         window.addstr(MAX_Y//2,(MAX_X//2-len(m)//2) + 1, m)
         window.addstr(MAX_Y//2 + 1,(MAX_X//2-len(m2)//2) + 1, m2)
         window.nodelay(0)
-        window.getch()
+        l =-1
+        lista.graficar()
+        while True:
+            l = window.getch()
+            if l is 10:
+                break
     elif snake.lose is True:
         m = "Game Over!"
         window.addstr(MAX_Y//2,(MAX_X//2-len(m)//2) + 1, m)
         window.nodelay(0)
-        window.getch()
+        ll =-1
+        lista.graficar()
+        while True:
+            ll = window.getch()
+            if ll is 10:
+                break
     else:
         m = "Saliste!"
         window.addstr(MAX_Y//2,(MAX_X//2-len(m)//2) + 1, m)
         window.nodelay(0)
-        window.getch()
+        lll =-1
+        lista.graficar()
+        while True:
+            lll = window.getch()
+            if lll is 10:
+                break
+
     cola.enqueue(us,str(snake.nivel)+"-"+str(snake.hit_score))
-    # pila.graficar()
+    #pila.graficar()
 
 def scoreboard(window,cola):
     window.clear()
     window.border(0)
-    window.addstr(1,ANCHO//2-len("Puntuaciones")//2,"Puntuaciones")
+    window.addstr(1,ANCHO//2-len("PUNTUACIONES")//2,"PUNTUACIONES")
     window.addstr(3,10,"Nombre")
     window.addstr(3,23,"Puntaje")
     window.addstr(4,21,"(Nivel-Pts)")
@@ -277,8 +346,9 @@ def userselect(window,lcd):
     while True:
         window.clear()
         window.border(0)
-        window.addstr(1,1,"Enter: Aceptar")
-        window.addstr(2,1,"Esc: Regresar")
+        window.addstr(1,ANCHO//2-len("USUARIOS")//2,"USUARIOS")
+        window.addstr(3,1,"Enter: Aceptar")
+        window.addstr(4,1,"Esc: Regresar")
         n = aux.name
         us = "<--   " + str(n) + "   -->"
         window.addstr(ALTO//2,ANCHO//2-len(str(us))//2,us)
@@ -298,6 +368,7 @@ def reports(window,ld,c,p,lc):
     while True:
         window.clear()
         window.border(0)
+        window.addstr(1,ANCHO//2-len("REPORTES")//2,"REPORTES")
         window.addstr(7,10,"1. Snake Report")
         window.addstr(8,10,"2. Score Report")
         window.addstr(9,10,"3. Scoreboard Report")
@@ -306,8 +377,7 @@ def reports(window,ld,c,p,lc):
         op = -1
         op = window.getch()
         if op is 49:
-            #ld.graficar()
-            a = 1
+            ld.graficar()
         elif op is 50:
             p.graficar()
         elif op is 51:
@@ -318,7 +388,22 @@ def reports(window,ld,c,p,lc):
             break
 
 def bulk(window):
-    a = 1
+    window.clear()
+    window.border(0)
+    window.addstr(1,ANCHO//2-len("CARGA MASIVA")//2,"CARGA MASIVA")
+    window.addstr(3,ANCHO//2-len("Ingresa el archivo .csv")//2,"Ingresa el archivo .csv")
+    window.addstr(4,ANCHO//2-len(str("Al terminar presiona ENTER"))//2,"Al terminar presiona ENTER")
+    string = ""
+    op = -1
+    while True:
+        window.addstr(ALTO//2+1,ANCHO//2-len(string)//2,string)
+        op = window.getch()
+        if op is 10:
+            break
+        elif op is not -1:
+            string += str(chr(op))
+        op = -1
+    return string
 
 
 if __name__ == '__main__':
@@ -326,14 +411,8 @@ if __name__ == '__main__':
     ld = ListaDoble()
     #---------------------
     lcd = ListaCircularDoble()
-    lcd.add("Regalo")
-    lcd.add("Bianca")
-    lcd.add("Coco")
-    lcd.add("Bonnie")
     #---------------------
     cola = Cola()
-    for i in range(13):
-        cola.enqueue(str("Juan" + str(i)),i*2)
     #---------------------
     pila = Pila()
     #---------------------
@@ -351,7 +430,6 @@ if __name__ == '__main__':
     
     window.clear()
     window.border(0)
-
     
     op = -1
     while True:
@@ -376,22 +454,71 @@ if __name__ == '__main__':
                     op = -1
 
                 usuario = string
-            play(window,usuario,cola)
+                lcd.add(usuario)
+            pila.vaciar()
+            ld.clean()
+            play(window,usuario,ld)
         elif op is 50:
             #2. Scoreboard
             scoreboard(window,cola)
         elif op is 51:
             #3. User Selection
-            usuario = userselect(window,lcd)
+            if lcd.primero is not None:
+                usuario = userselect(window,lcd)
+            else:
+                window.clear()
+                window.border(0)
+                window.addstr(1,ANCHO//2-len("USUARIOS")//2,"USUARIOS")
+                window.addstr(5,ANCHO//2-len("NO HAY USUARIOS")//2,"NO HAY USUARIOS")
+                window.addstr(7,ANCHO//2-len("Juega para crear uno")//2,"Juega para crear uno")
+                window.addstr(12,ANCHO//2-len("Enter para continuar...")//2,"Enter para continuar...")
+                while True:
+                    ent = window.getch()
+                    if ent is 10:
+                        break
         elif op is 52:
             #4. Reports
-            #ld.graficar()
             reports(window,ld,cola,pila,lcd)
         elif op is 53:
             #5. Bulk Loading
-            a = 1
+            arch = bulk(window)
+            try:
+                with open(arch) as csv_f:
+                    csv_r = csv.reader(csv_f,delimiter=',')
+                    line = 0
+                    for row in csv_r:
+                        if line == 0:
+                            #Header de usuario
+                            line += 1
+                        else:
+                            lcd.add(str(row[0]))
+                            line += 1
+                sel = -1
+                while True:
+                    window.clear()
+                    window.border(0)
+                    window.addstr(1,ANCHO//2-len("Carga Masiva")//2,"Carga Masiva")
+                    window.addstr(ALTO//2,ANCHO//2-len("Ususarios cargados")//2,"Ususarios cargados")
+                    sel = window.getch()
+                    if sel == 10:
+                        break
+            except:
+                window.clear()
+                window.border(0)
+                sel = -1
+                while True:
+                    window.addstr(1,ANCHO//2-len("Carga Masiva")//2,"Carga Masiva")
+                    window.addstr(ALTO//2-2,ANCHO//2-len("Error con el archivo")//2,"Error con el archivo")
+                    window.addstr(ALTO//2,ANCHO//2-len("Verifica su ubicacion y existencia")//2,"Verifica su ubicacion y existencia")
+                    window.addstr(ALTO//2+2,ANCHO//2-len("Vuelve a intentar")//2,"Vuelve a intentar")
+                    sel = window.getch()
+                    if sel == 10:
+                        break
         elif op is 54:
-            #6. Exit
+            #6. Limpiar usuario
+            usuario = ""
+        elif op is 55:
+            #7. Exit
             break
-    
+
     curses.endwin()

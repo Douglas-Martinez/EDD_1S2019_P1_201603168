@@ -1,8 +1,9 @@
 # Lista Doblemente Enlazada (SNAKE)
 class NodoSerpiente(object):
-    def __init__(self, x=None, y=None, next=None, prev=None):
+    def __init__(self, x=None, y=None, c=None , next=None, prev=None):
         self.x = x
         self.y = y
+        self.ch = c
         self.sig = next # Siguiente es Derecha
         self.ant = prev # Anterior es Izquierda
     '''
@@ -41,7 +42,6 @@ class NodoCola(object):
     '''
     FRENTE -> nodoC ->(sig) nodoC ->(sig) null <- COLA
     '''
-
 
 # Lista Circular Doblemente Enlazada (USUARIOS)
 class NodoUsuario(object):
